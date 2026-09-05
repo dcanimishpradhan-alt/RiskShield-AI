@@ -13,19 +13,8 @@ All transaction, customer, and dispute data used here is 100% synthetically gene
 
 Architecture is as follows
 
-Razorpay Webhooks ──▶ Signature Verification ──▶ Dispute Data
-                                                       │
-                                                       ▼
-Synthetic Transactions ──▶ Risk Scoring (XGBoost + Isolation Forest)
-        │                                             │
-        ▼                                             ▼
-Chargeback Case Generator ──▶ Visa CE3.0 Engine ──▶ Evidence Narrative (LLM)
-        │
-        ▼
-Fraud Spike Detector (CUSUM)
-        │
-        ▼
-Merchant Dashboard (index.html) ◀── FastAPI backend (component4.py)
+<img width="615" height="344" alt="image" src="https://github.com/user-attachments/assets/a89d73ce-1b80-4288-9eeb-b7792216b0e7" />
+
 
 What Each File Does
 
