@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>RiskShield AI</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+
+<body class="bg-slate-950 text-white min-h-screen">
+
+
+    <!-- MAIN CONTAINER -->
+
+    <div class="max-w-6xl mx-auto px-6 py-8">
+
+
+        <!-- HEADER -->
+
+        <div class="flex justify-between items-center
+                    border-b border-slate-800 pb-6 mb-8">
+
+            <div>
+
+                <h1 class="text-3xl font-bold text-emerald-400">
+
+                    🛡️ RiskShield AI
+
+                </h1>
+
+                <p class="text-slate-400 mt-1">
+
+                    Fraud & Dispute Monitoring Dashboard
+
+                </p>
+
+            </div>
+
+
+            <div id="connectionStatus"
+                 class="px-4 py-2 rounded-full
+                        bg-yellow-900 text-yellow-300
+                        border border-yellow-700">
+
+                ● Connecting...
+
+            </div>
+
+        </div>
+
+
+
+        <!-- STAT CARDS -->
+
+        <div class="grid grid-cols-1
+                    md:grid-cols-3 gap-6 mb-8">
+
+
+            <!-- SYSTEM -->
+
+            <div class="bg-slate-900
+                        border border-slate-800
+                        rounded-xl p-6">
+
+                <p class="text-slate-400 text-sm">
+
+                    System Status
+
+                </p>
+
+                <p class="text-2xl font-bold
+                          text-emerald-400 mt-2">
+
+                    Active
+
+                </p>
+
+            </div>
+
+
+            <!-- VISA -->
+
+            <div class="bg-slate-900
+                        border border-slate-800
+                        rounded-xl p-6">
+
+                <p class="text-slate-400 text-sm">
+
+                    Visa CE 3.0 Engine
+
+                </p>
+
+                <p class="text-2xl font-bold
+                          text-blue-400 mt-2">
+
+                    Ready
+
+                </p>
+
+            </div>
+
+
+            <!-- WEBHOOK -->
+
+            <div class="bg-slate-900
+                        border border-slate-800
+                        rounded-xl p-6">
+
+                <p class="text-slate-400 text-sm">
+
+                    Webhook
+
+                </p>
+
+                <p class="text-2xl font-bold
+                          text-amber-400 mt-2">
+
+                    Listening
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TRANSACTION SECTION -->
+
+        <div class="bg-slate-900
+                    border border-slate-800
+                    rounded-xl p-6">
+
+
+            <div class="flex justify-between
+                        items-center mb-6">
+
+
+                <div>
+
+                    <h2 class="text-xl font-semibold">
+
+                        Latest Captured Transaction
+
+                    </h2>
+
+                    <p class="text-slate-500 text-sm mt-1">
+
+                        Automatically updated from backend
+
+                    </p>
+
+                </div>
+
+
+                <div id="liveIndicator"
+                     class="text-sm text-slate-500">
+
+                    Checking...
+
+                </div>
+
+            </div>
+
+
+
+            <!-- TRANSACTION BOX -->
+
+            <div id="transactionContainer">
+
+                <div class="bg-slate-950
+                            border border-slate-800
+                            rounded-lg p-8
+                            text-center">
+
+                    <div class="text-4xl mb-3">
+
+                        ⏳
+
+                    </div>
+
+                    <p class="text-slate-400">
+
+                        Waiting for fraudulent transaction...
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+
+<script>
+
+
+// Backend URL
+
+const BACKEND_URL = "http://127.0.0.1:8000";
+
+
+// =====================================================
+// CHECK BACKEND CONNECTION
+// =====================================================
+
+async function checkBackend() {
+
+    try {
+
+        const response = await fetch(
+            `${BACKEND_URL}/health`
+        );
+
+
+        if (response.ok) {
+
+            const status =
+                document.getElementById(
+                    "connectionStatus"
+                );
+
+            status.innerHTML = "● Backend Connected";
+
+            status.className =
+                "px-4 py-2 rounded-full " +
+                "bg-emerald-900 text-emerald-300 " +
+                "border border-emerald-700";
+
+        }
+
+    }
+
+    catch (error) {
+
+        const status =
+            document.getElementById(
+                "connectionStatus"
+            );
+
+        status.innerHTML = "● Backend Offline";
+
+        status.className =
+            "px-4 py-2 rounded-full " +
+            "bg-red-900 text-red-300 " +
+            "border border-red-700";
+
+    }
+
+}
+
+
+
+// =====================================================
+// GET TRANSACTION
+// =====================================================
+
+async function getTransaction() {
+
+    try {
+
+        const response = await fetch(
+            `${BACKEND_URL}/api/dispute`
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Backend API error"
+            );
+
+        }
+
+
+        const data = await response.json();
+
+
+        const dispute = data.dispute;
+
+
+        const live =
+            document.getElementById(
+                "liveIndicator"
+            );
+
+        live.innerHTML =
+            "● Live • Updated just now";
+
+        live.className =
+            "text-sm text-emerald-400";
+
+
+        // No transaction yet
+
+        if (!dispute ||
+            Object.keys(dispute).length === 0) {
+
+            document.getElementById(
+                "transactionContainer"
+            ).innerHTML = `
+
+                <div class="bg-slate-950
+                            border border-slate-800
+                            rounded-lg p-8
+                            text-center">
+
+                    <div class="text-4xl mb-3">
+                        ⏳
+                    </div>
+
+                    <p class="text-slate-400">
+                        Waiting for fraudulent transaction...
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        // Convert paise to rupees
+
+        const amount =
+            (dispute.amount || 0) / 100;
+
+
+        // =================================================
+        // DISPLAY TRANSACTION
+        // =================================================
+
+        document.getElementById(
+            "transactionContainer"
+        ).innerHTML = `
+
+            <div class="bg-slate-950
+                        border border-red-800
+                        rounded-xl p-6">
+
+
+                <!-- FRAUD ALERT -->
+
+                <div class="flex items-center
+                            gap-3 mb-6
+                            bg-red-950
+                            border border-red-800
+                            rounded-lg p-4">
+
+                    <div class="text-3xl">
+
+                        🚨
+
+                    </div>
+
+                    <div>
+
+                        <p class="font-bold
+                                  text-red-400">
+
+                            FRAUDULENT TRANSACTION DETECTED
+
+                        </p>
+
+                        <p class="text-red-300
+                                  text-sm">
+
+                            Dispute received from webhook
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- DETAILS -->
+
+                <div class="grid grid-cols-1
+                            md:grid-cols-2 gap-4">
+
+
+                    <!-- DISPUTE ID -->
+
+                    <div class="bg-slate-900
+                                rounded-lg p-4">
+
+                        <p class="text-slate-500 text-sm">
+
+                            Dispute ID
+
+                        </p>
+
+                        <p class="text-emerald-400
+                                  font-mono mt-1">
+
+                            ${dispute.id || "N/A"}
+
+                        </p>
+
+                    </div>
+
+
+
+                    <!-- STATUS -->
+
+                    <div class="bg-slate-900
+                                rounded-lg p-4">
+
+                        <p class="text-slate-500 text-sm">
+
+                            Status
+
+                        </p>
+
+                        <p class="text-amber-400
+                                  font-semibold mt-1">
+
+                            ${dispute.status || "N/A"}
+
+                        </p>
+
+                    </div>
+
+
+
+                    <!-- AMOUNT -->
+
+                    <div class="bg-slate-900
+                                rounded-lg p-4">
+
+                        <p class="text-slate-500 text-sm">
+
+                            Transaction Amount
+
+                        </p>
+
+                        <p class="text-white
+                                  text-xl font-bold mt-1">
+
+                            ₹${amount.toFixed(2)}
+
+                        </p>
+
+                    </div>
+
+
+
+                    <!-- CURRENCY -->
+
+                    <div class="bg-slate-900
+                                rounded-lg p-4">
+
+                        <p class="text-slate-500 text-sm">
+
+                            Currency
+
+                        </p>
+
+                        <p class="text-white
+                                  font-semibold mt-1">
+
+                            ${dispute.currency || "INR"}
+
+                        </p>
+
+                    </div>
+
+
+
+                    <!-- VISA -->
+
+                    <div class="bg-slate-900
+                                rounded-lg p-4
+                                md:col-span-2">
+
+                        <p class="text-slate-500 text-sm">
+
+                            Visa CE 3.0 Eligibility
+
+                        </p>
+
+                        <p class="text-blue-400
+                                  font-semibold mt-1">
+
+                            ${dispute.visa_ce_3_0_status || "N/A"}
+
+                        </p>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- MESSAGE -->
+
+                <div class="mt-6
+                            bg-red-950
+                            border border-red-900
+                            rounded-lg p-4">
+
+                    <p class="text-slate-400 text-sm">
+
+                        System Message
+
+                    </p>
+
+                    <p class="text-red-300
+                              font-semibold mt-1">
+
+                        ${dispute.message || "N/A"}
+
+                    </p>
+
+                </div>
+
+
+            </div>
+
+        `;
+
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Error fetching transaction:",
+            error
+        );
+
+        const live =
+            document.getElementById(
+                "liveIndicator"
+            );
+
+        live.innerHTML =
+            "● Waiting for backend";
+
+        live.className =
+            "text-sm text-yellow-400";
+
+    }
+
+}
+
+
+
+// =====================================================
+// START
+// =====================================================
+
+checkBackend();
+
+getTransaction();
+
+
+// Check every 2 seconds
+
+setInterval(
+    getTransaction,
+    2000
+);
+
+
+// Check backend every 5 seconds
+
+setInterval(
+    checkBackend,
+    5000
+);
+
+
+</script>
+
+
+</body>
+
+</html>
